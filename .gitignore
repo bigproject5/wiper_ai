@@ -1,0 +1,7 @@
+/.idea/
+/venv/
+/.venv/
+/.env
+/tests/
+*.pth
+/models/*.pth
