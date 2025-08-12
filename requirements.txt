@@ -1,0 +1,17 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.7.0
+torch==2.8.0
+torchvision==0.23.0
+transformers==4.47.1
+numpy==1.26.4
+pillow==11.0.0
+kafka-python==2.0.2
+boto3==1.35.85
+botocore==1.35.85
+python-multipart==0.0.19
+python-dotenv==1.0.1
+requests==2.32.3
+opencv-python==4.10.0.84
+av==13.1.0
