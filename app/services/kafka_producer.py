@@ -4,7 +4,7 @@ from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
 from app.config import settings
-from app.schemas import AiDiagnosisCompletedEventDTO
+from app.events.event_dto import AiDiagnosisCompletedEventDTO
 
 logger = logging.getLogger(__name__)
 
