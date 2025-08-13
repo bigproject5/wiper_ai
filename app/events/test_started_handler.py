@@ -91,27 +91,27 @@ class TestStartedEventHandler(BaseEventHandler):
     def _send_result(self, event: TestStartedEventDTO, result: Dict[str, Any]):
         """결과 발송"""
         try:
-            # 진단 상세 내용 생성
-            processing_time = result.get('processing_time', 0.0)
-            diagnosis = f"{result['diagnosis_result']}, 처리시간: {processing_time:.3f}초"
+            # 진단 결과에서 클래스명만 추출
+            predicted_class = result.get('predicted_class', 'unknown')
 
-            # 결과 메시지 생성
+            # AI 진단 완료 이벤트 DTO 생성
             ai_result = AiDiagnosisCompletedEventDTO(
                 auditId=event.auditId,
                 inspectionId=event.inspectionId,
                 inspectionType=event.inspectionType,
                 isDefect=result['is_defect'],
                 collectDataPath=event.collectDataPath,
-                resultDataPath=event.collectDataPath.replace('.mp4', '_result.json'),
-                diagnosisResult=diagnosis
+                resultDataPath=event.collectDataPath,  # collectDataPath 그대로 사용
+                diagnosisResult=predicted_class  # 진단된 클래스명만
             )
 
-            # Kafka 발송
+            # Kafka로 결과 발송
             success = kafka_producer.send_ai_diagnosis_result(ai_result)
             if success:
-                self.logger.info(f"결과 발송 성공 - {result['predicted_class']}")
+                self.logger.info(f"AI 진단 결과 발송 성공 - 클래스: {predicted_class}, 결함여부: {result['is_defect']}")
+                self.logger.info(f"발송된 데이터: {ai_result.dict()}")
             else:
-                self.logger.error(f"결과 발송 실패")
+                self.logger.error("AI 진단 결과 발송 실패")
 
         except Exception as e:
             self.logger.error(f"결과 발송 중 오류: {e}")

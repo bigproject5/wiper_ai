@@ -18,4 +18,4 @@ class AiDiagnosisCompletedEventDTO(BaseModel):
     isDefect: bool  # 결함 여부 (True: 결함, False: 정상)
     collectDataPath: str  # 원본 데이터 S3 경로
     resultDataPath: str  # 결과 데이터 S3 경로
-    diagnosisResult: str  # 상세 진단 결과 설명
+    diagnosisResult: str  # 진단 클래스

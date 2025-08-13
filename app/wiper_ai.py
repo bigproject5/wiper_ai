@@ -26,8 +26,8 @@ class WiperAI:
             0: 'angle_limit',
             1: 'left_fail',
             2: 'normal',
-            3: 'right_wiper_fail',
-            4: 'slow',
+            3: 'slow',
+            4: 'right_fail',
             5: 'wiper_lag',
             6: 'wiper_stop'
         }
