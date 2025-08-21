@@ -9,25 +9,31 @@ from pathlib import Path
 from transformers import VivitImageProcessor, VivitForVideoClassification, VivitConfig
 import cv2
 
+# 새로운 후처리 파이프라인 import
+from app.inference_pipeline import InferencePipeline, PipelineBuilder
+
 logger = logging.getLogger(__name__)
 
 class WiperAI:
-    """와이퍼 AI - 단순화된 버전"""
+    """와이퍼 AI - 개선된 후처리 파이프라인 적용"""
 
-    def __init__(self, model_path: str):
+    def __init__(self, model_path: str, pipeline_config: Optional[Dict[str, Any]] = None):
         self.model_path = model_path
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = None
         self.processor = None
         self.model_loaded = False
 
-        # 클래스 매핑
+        # 후처리 파이프라인 설정
+        self.pipeline = self._setup_pipeline(pipeline_config)
+
+        # 클래스 매핑 - 학습 시 사용된 정확한 매핑으로 수정 필요
         self.class_mapping = {
             0: 'angle_limit',
             1: 'left_fail',
             2: 'normal',
-            3: 'slow',
-            4: 'right_fail',
+            3: 'right_wiper_fail',  # 수정됨 (기존: 'right_fail')
+            4: 'slow',
             5: 'wiper_lag',
             6: 'wiper_stop'
         }
@@ -36,6 +42,49 @@ class WiperAI:
         self.clip_duration = 2.0
         self.stride = 1.0
         self.num_frames = 32
+
+    def _setup_pipeline(self, config: Optional[Dict[str, Any]]) -> InferencePipeline:
+        """후처리 파이프라인 설정"""
+        if config is None:
+            # 기본 설정: 단순 다수결
+            logger.info("기본 후처리 파이프라인 사용: 단순 다수결")
+            return PipelineBuilder.create_simple_pipeline()
+
+        pipeline_type = config.get('type', 'simple')
+
+        if pipeline_type == 'simple':
+            return PipelineBuilder.create_simple_pipeline()
+
+        elif pipeline_type == 'confidence_weighted':
+            weight_power = config.get('weight_power', 2.0)
+            return PipelineBuilder.create_confidence_pipeline(weight_power)
+
+        elif pipeline_type == 'threshold_based':
+            confidence_threshold = config.get('confidence_threshold', 0.7)
+            min_defect_ratio = config.get('min_defect_ratio', 0.3)
+            return PipelineBuilder.create_threshold_pipeline(confidence_threshold, min_defect_ratio)
+
+        elif pipeline_type == 'temporal_consistency':
+            min_sequence_length = config.get('min_sequence_length', 3)
+            coverage_weight = config.get('coverage_weight', 0.5)
+            return PipelineBuilder.create_temporal_pipeline(min_sequence_length, coverage_weight)
+
+        elif pipeline_type == 'ensemble':
+            confidence_threshold = config.get('confidence_threshold', 0.7)
+            min_defect_ratio = config.get('min_defect_ratio', 0.3)
+            min_sequence_length = config.get('min_sequence_length', 3)
+            processor_weights = config.get('processor_weights')
+            return PipelineBuilder.create_ensemble_pipeline(
+                confidence_threshold, min_defect_ratio, min_sequence_length, processor_weights
+            )
+
+        elif pipeline_type == 'custom':
+            processors_config = config.get('processors', [])
+            return PipelineBuilder.create_custom_pipeline(processors_config)
+
+        else:
+            logger.warning(f"알 수 없는 파이프라인 타입: {pipeline_type}, 기본 파이프라인 사용")
+            return PipelineBuilder.create_simple_pipeline()
 
     def load_model(self) -> bool:
         """모델 로딩"""
@@ -68,6 +117,7 @@ class WiperAI:
 
             self.model_loaded = True
             logger.info(f"모델 로딩 완료 - 디바이스: {self.device}")
+            logger.info(f"후처리 파이프라인: {self.pipeline.processors[0].get_name() if self.pipeline.processors else 'None'}")
             return True
 
         except Exception as e:
@@ -95,8 +145,8 @@ class WiperAI:
             if not predictions:
                 raise RuntimeError("모든 클립 처리에 실패했습니다")
 
-            # 3. 결과 통합
-            final_result = self._aggregate_results(predictions, len(clips))
+            # 3. 새로운 후처리 파이프라인으로 결과 통합
+            final_result = self.pipeline.process(predictions, len(clips))
             final_result['processing_time'] = time.time() - start_time
 
             return final_result
@@ -242,3 +292,8 @@ class WiperAI:
             'total_clips': total_clips,
             'successful_clips': len(predictions)
         }
+
+    def update_pipeline_config(self, config: Dict[str, Any]):
+        """런타임에서 파이프라인 설정 변경"""
+        logger.info(f"후처리 파이프라인 설정 변경: {config}")
+        self.pipeline = self._setup_pipeline(config)
