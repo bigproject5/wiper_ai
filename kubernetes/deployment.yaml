@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiper-ai-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wiper-ai
+  template:
+    metadata:
+      labels:
+        app: wiper-ai
+    spec:
+      containers:
+        - name: wiper-ai
+          image:
+          ports:
+            - containerPort: 8000
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  name: operation-secrets
+                  key: kafka.bootstrap.server
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: operation-secrets
+                  key: s3.accessKey
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: operation-secrets
+                  key: s3.secretKey

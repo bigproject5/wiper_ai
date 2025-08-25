@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     # Kafka 설정 - TestStartedEvent 구독용
-    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+    KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "")
     KAFKA_INPUT_TOPIC: str = "test-started"  # TestStartedEvent 토픽
     KAFKA_OUTPUT_TOPIC: str = "ai-diagnosis-completed"  # AI 결과 발행용 (기존 유지)
     KAFKA_CONSUMER_GROUP: str = "ai-wiper-group"  # AI 서비스 전용 그룹
