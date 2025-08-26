@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # S3 설정
     AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "")
     AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
-    AWS_REGION: str = "ap-southeast-2"
+    AWS_REGION: str = "ap-northeast-2"
     S3_BUCKET: str = "aivle-5"
 
     # 모델 설정

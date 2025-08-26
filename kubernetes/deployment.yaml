@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: wiper-ai
-          image:
+          image: 956463122808.dkr.ecr.ap-northeast-2.amazonaws.com/wiper_ai:v6
           ports:
             - containerPort: 8000
           env:
