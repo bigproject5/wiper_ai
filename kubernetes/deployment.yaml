@@ -12,9 +12,20 @@ spec:
       labels:
         app: wiper-ai
     spec:
+      nodeSelector:
+        workload-type: python
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "python-apps"
+          effect: "NoSchedule"
       containers:
         - name: wiper-ai
-          image: 956463122808.dkr.ecr.ap-northeast-2.amazonaws.com/wiper_ai:v6
+          image: 956463122808.dkr.ecr.ap-northeast-2.amazonaws.com/wiper_ai:v7
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
           ports:
             - containerPort: 8000
           env:
